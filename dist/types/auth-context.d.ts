@@ -13,6 +13,9 @@ export interface UserContext {
     userId?: string;
     roles?: string[];
     classId?: string | null;
+    authTime?: number;
+    exp?: number;
+    iat?: number;
     [key: string]: any;
 }
 //# sourceMappingURL=auth-context.d.ts.map

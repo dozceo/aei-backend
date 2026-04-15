@@ -21,6 +21,16 @@ const request_logger_1 = require("./middleware/request-logger");
 const notifications_1 = __importDefault(require("./routes/notifications"));
 const interventions_1 = __importDefault(require("./routes/interventions"));
 const tracking_1 = __importDefault(require("./routes/tracking"));
+function getAllowedOrigins() {
+    const configuredOrigins = process.env.CORS_ORIGIN;
+    if (!configuredOrigins) {
+        return ['http://localhost:3000', 'http://localhost:3001'];
+    }
+    return configuredOrigins
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter((origin) => origin.length > 0);
+}
 /**
  * Initialize Express application with full middleware configuration
  */
@@ -33,7 +43,7 @@ function createApp() {
     app.use((0, helmet_1.default)());
     // CORS configuration
     app.use((0, cors_1.default)({
-        origin: process.env.CORS_ORIGIN || ['http://localhost:3000', 'http://localhost:3001'],
+        origin: getAllowedOrigins(),
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization'],

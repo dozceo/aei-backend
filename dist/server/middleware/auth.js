@@ -5,47 +5,35 @@
  *
  * Verifies Firebase JWT tokens and attaches user context to requests
  */
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyAdmin = void 0;
 exports.verifyAuth = verifyAuth;
 exports.verifyAuthOptional = verifyAuthOptional;
 exports.requireRole = requireRole;
-const admin = __importStar(require("firebase-admin"));
+const firebase_1 = require("../../lib/firebase");
 const logger_1 = require("../utils/logger");
-const auth = admin.auth();
+function getRoleCandidates(decodedToken) {
+    const candidates = [];
+    const roleValue = decodedToken.role;
+    if (typeof roleValue === 'string' && roleValue.length > 0) {
+        candidates.push(roleValue);
+    }
+    const rolesValue = decodedToken.roles;
+    if (Array.isArray(rolesValue)) {
+        rolesValue.forEach((entry) => {
+            if (typeof entry === 'string' && entry.length > 0) {
+                candidates.push(entry);
+            }
+        });
+    }
+    if (candidates.length === 0) {
+        candidates.push('STUDENT');
+    }
+    return Array.from(new Set(candidates));
+}
+function matchesRole(actualRoles, expectedRole) {
+    return actualRoles.some((actualRole) => actualRole.toLowerCase() === expectedRole.toLowerCase());
+}
 /**
  * Express middleware to verify Firebase authentication token
  * Extracts token from Authorization header and validates with Firebase
@@ -59,13 +47,17 @@ async function verifyAuth(req, res, next) {
             res.status(401).json({ error: 'Unauthorized', message: 'Missing or invalid Authorization header' });
             return;
         }
-        const token = authHeader.substring(7); // Remove "Bearer " prefix
-        const decodedToken = await auth.verifyIdToken(token);
+        const token = authHeader.substring(7);
+        const decodedToken = await firebase_1.auth.verifyIdToken(token);
+        const roleCandidates = getRoleCandidates(decodedToken);
+        const primaryRole = roleCandidates[0];
         // Attach user context to request
         req.user = {
             uid: decodedToken.uid,
+            userId: decodedToken.uid,
             email: decodedToken.email || '',
-            role: decodedToken.role || 'STUDENT',
+            role: primaryRole,
+            roles: roleCandidates,
             ...decodedToken,
         };
         logger_1.logger.debug(`Auth verified for user: ${req.user.uid}`);
@@ -87,11 +79,14 @@ async function verifyAuthOptional(req, res, next) {
         const authHeader = req.headers.authorization;
         if (authHeader && authHeader.startsWith('Bearer ')) {
             const token = authHeader.substring(7);
-            const decodedToken = await auth.verifyIdToken(token);
+            const decodedToken = await firebase_1.auth.verifyIdToken(token);
+            const roleCandidates = getRoleCandidates(decodedToken);
             req.user = {
                 uid: decodedToken.uid,
+                userId: decodedToken.uid,
                 email: decodedToken.email || '',
-                role: decodedToken.role || 'STUDENT',
+                role: roleCandidates[0],
+                roles: roleCandidates,
                 ...decodedToken,
             };
         }
@@ -112,7 +107,9 @@ function requireRole(...roles) {
             res.status(401).json({ error: 'Unauthorized' });
             return;
         }
-        if (!roles.includes(req.user.role)) {
+        const actualRoles = [req.user.role, ...(req.user.roles || [])].filter((value) => typeof value === 'string' && value.length > 0);
+        const hasRole = roles.some((requiredRole) => matchesRole(actualRoles, requiredRole));
+        if (!hasRole) {
             res.status(403).json({
                 error: 'Forbidden',
                 message: `This operation requires one of: ${roles.join(', ')}`,
@@ -125,5 +122,5 @@ function requireRole(...roles) {
 /**
  * Admin-only authorization middleware
  */
-exports.verifyAdmin = requireRole('ADMIN');
+exports.verifyAdmin = requireRole('ADMIN', 'admin');
 //# sourceMappingURL=auth.js.map

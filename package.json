@@ -8,6 +8,7 @@
     "dev": "tsx watch src/server/index.ts",
     "build": "tsc",
     "start": "node dist/server/index.js",
+    "auth:set-claims": "tsx src/scripts/set-custom-claims.ts",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
     "test": "jest",

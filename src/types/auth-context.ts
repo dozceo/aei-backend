@@ -17,6 +17,11 @@ export interface UserContext {
   userId?: string;
   roles?: string[];
   classId?: string | null;
+
+  // Token helper fields
+  authTime?: number;
+  exp?: number;
+  iat?: number;
   
   // Allow any other properties
   [key: string]: any;

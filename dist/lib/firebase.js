@@ -39,11 +39,28 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.auth = exports.db = exports.firebaseAdmin = void 0;
 const admin = __importStar(require("firebase-admin"));
-// Initialize Firebase Admin SDK
+function parseServiceAccountFromEnv() {
+    const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+    if (!raw) {
+        return null;
+    }
+    try {
+        return JSON.parse(raw);
+    }
+    catch {
+        throw new Error('FIREBASE_SERVICE_ACCOUNT_JSON is set but not valid JSON.');
+    }
+}
 if (!admin.apps.length) {
+    const serviceAccount = parseServiceAccountFromEnv();
+    const resolvedProjectId = process.env.FIREBASE_PROJECT_ID ||
+        process.env.GOOGLE_CLOUD_PROJECT_ID ||
+        process.env.GOOGLE_CLOUD_PROJECT ||
+        'sankalp-learning';
     admin.initializeApp({
-        projectId: process.env.FIREBASE_PROJECT_ID || 'sankalp-learning',
-        // Uses ADC (Application Default Credentials) or GOOGLE_APPLICATION_CREDENTIALS env var
+        credential: serviceAccount ? admin.credential.cert(serviceAccount) : admin.credential.applicationDefault(),
+        projectId: resolvedProjectId,
+        databaseURL: process.env.FIREBASE_DATABASE_URL,
     });
 }
 exports.firebaseAdmin = admin;

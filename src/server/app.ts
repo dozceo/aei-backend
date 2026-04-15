@@ -21,6 +21,19 @@ import notificationsRouter from './routes/notifications';
 import interventionsRouter from './routes/interventions';
 import trackingRouter from './routes/tracking';
 
+function getAllowedOrigins(): string[] {
+  const configuredOrigins = process.env.CORS_ORIGIN;
+
+  if (!configuredOrigins) {
+    return ['http://localhost:3000', 'http://localhost:3001'];
+  }
+
+  return configuredOrigins
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0);
+}
+
 /**
  * Initialize Express application with full middleware configuration
  */
@@ -37,7 +50,7 @@ export function createApp(): Express {
   // CORS configuration
   app.use(
     cors({
-      origin: process.env.CORS_ORIGIN || ['http://localhost:3000', 'http://localhost:3001'],
+      origin: getAllowedOrigins(),
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
