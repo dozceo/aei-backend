@@ -21,6 +21,7 @@ const request_logger_1 = require("./middleware/request-logger");
 const notifications_1 = __importDefault(require("./routes/notifications"));
 const interventions_1 = __importDefault(require("./routes/interventions"));
 const tracking_1 = __importDefault(require("./routes/tracking"));
+const billing_1 = __importDefault(require("./routes/billing"));
 function getAllowedOrigins() {
     const configuredOrigins = process.env.CORS_ORIGIN;
     if (!configuredOrigins) {
@@ -77,6 +78,7 @@ function createApp() {
         });
     });
     // Mount API routes - these include their own auth middleware
+    app.use('/api', billing_1.default);
     app.use('/api', notifications_1.default);
     app.use('/api', interventions_1.default);
     app.use('/api', tracking_1.default);

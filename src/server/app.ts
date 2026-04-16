@@ -20,6 +20,7 @@ import { requestLogger } from './middleware/request-logger';
 import notificationsRouter from './routes/notifications';
 import interventionsRouter from './routes/interventions';
 import trackingRouter from './routes/tracking';
+import billingRouter from './routes/billing';
 
 function getAllowedOrigins(): string[] {
   const configuredOrigins = process.env.CORS_ORIGIN;
@@ -93,6 +94,7 @@ export function createApp(): Express {
   });
 
   // Mount API routes - these include their own auth middleware
+  app.use('/api', billingRouter);
   app.use('/api', notificationsRouter);
   app.use('/api', interventionsRouter);
   app.use('/api', trackingRouter);
