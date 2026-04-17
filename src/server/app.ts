@@ -21,6 +21,7 @@ import notificationsRouter from './routes/notifications';
 import interventionsRouter from './routes/interventions';
 import trackingRouter from './routes/tracking';
 import billingRouter from './routes/billing';
+import firestoreRouter from '../routes/firestore.routes';
 
 function getAllowedOrigins(): string[] {
   const configuredOrigins = process.env.CORS_ORIGIN;
@@ -98,6 +99,7 @@ export function createApp(): Express {
   app.use('/api', notificationsRouter);
   app.use('/api', interventionsRouter);
   app.use('/api', trackingRouter);
+  app.use('/api', firestoreRouter);
 
   // ═══════════════════════════════════════════════════════════════
   // 404 & Error Handling
