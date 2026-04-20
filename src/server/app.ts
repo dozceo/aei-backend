@@ -17,6 +17,7 @@ import { errorHandler } from './middleware/error-handler';
 import { requestLogger } from './middleware/request-logger';
 
 // Route imports
+import authRouter from '../routes/auth.routes';
 import notificationsRouter from './routes/notifications';
 import interventionsRouter from './routes/interventions';
 import trackingRouter from './routes/tracking';
@@ -95,6 +96,7 @@ export function createApp(): Express {
   });
 
   // Mount API routes - these include their own auth middleware
+  app.use('/api/auth', authRouter);
   app.use('/api', billingRouter);
   app.use('/api', notificationsRouter);
   app.use('/api', interventionsRouter);
