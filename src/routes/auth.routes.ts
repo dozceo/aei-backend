@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { auth as firebaseAuth } from "../lib/firebase";
 import firestoreService from "../services/firestore.service";
+import seedService from "../services/seed.service";
 import { verifyAuth } from "../server/middleware/auth";
 import { logger } from "../server/utils/logger";
 
@@ -38,7 +39,7 @@ router.post("/init-user", verifyAuth, async (req: Request, res: Response) => {
       updatedAt: timestamp,
     };
 
-    await firestoreService.create("users", userDocData);
+    await firestoreService.set("users", uid, userDocData);
 
     // 3. Initialize Role-Specific Document
     const roleCollectionMap: Record<string, string> = {
@@ -48,7 +49,10 @@ router.post("/init-user", verifyAuth, async (req: Request, res: Response) => {
     };
     const roleCollection = roleCollectionMap[role];
     
-    await firestoreService.create(roleCollection, userDocData);
+    await firestoreService.set(roleCollection, uid, userDocData);
+
+    // 4. Seed Role-Specific Page Data
+    await seedService.seedUserPages(uid, role);
 
     res.status(200).json({ 
       message: "User initialized successfully",
