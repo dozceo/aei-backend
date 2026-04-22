@@ -15,6 +15,16 @@ build/
 .env.local
 .env.*.local
 
+# Secrets & credentials
+serviceAccountKey.json
+**/serviceAccountKey.json
+credentials.json
+token.json
+*.pem
+*.key
+*.p12
+*.jks
+
 # IDE/Editor
 .vscode/
 .idea/
@@ -26,7 +36,6 @@ build/
 
 # OS
 Thumbs.db
-.DS_Store
 
 # Logs
 logs/
